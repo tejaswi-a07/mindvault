@@ -9,6 +9,8 @@ class Note {
   bool isFavorite;
   List<String> tags;
   String? type; // 'note', 'idea', 'task', 'reflection', 'voice', 'photo'
+  String? mediaData; // data URI for locally captured web media
+  String? mediaType; // 'audio' or 'image'
 
   Note({
     required this.id,
@@ -21,6 +23,8 @@ class Note {
     this.isFavorite = false,
     required this.tags,
     this.type = 'note',
+    this.mediaData,
+    this.mediaType,
   });
 
   Note copyWith({
@@ -34,6 +38,8 @@ class Note {
     bool? isFavorite,
     List<String>? tags,
     String? type,
+    String? mediaData,
+    String? mediaType,
   }) {
     return Note(
       id: id ?? this.id,
@@ -46,6 +52,8 @@ class Note {
       isFavorite: isFavorite ?? this.isFavorite,
       tags: tags ?? List<String>.from(this.tags),
       type: type ?? this.type,
+      mediaData: mediaData ?? this.mediaData,
+      mediaType: mediaType ?? this.mediaType,
     );
   }
 
@@ -60,6 +68,8 @@ class Note {
     'isFavorite': isFavorite,
     'tags': tags,
     'type': type,
+    'mediaData': mediaData,
+    'mediaType': mediaType,
   };
 
   factory Note.fromJson(Map<String, dynamic> json) => Note(
@@ -73,5 +83,7 @@ class Note {
     isFavorite: json['isFavorite'] as bool? ?? false,
     tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     type: json['type'] as String? ?? 'note',
+    mediaData: json['mediaData'] as String?,
+    mediaType: json['mediaType'] as String?,
   );
 }
