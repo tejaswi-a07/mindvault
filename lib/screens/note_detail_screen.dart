@@ -5,6 +5,7 @@ import '../models/note.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import 'note_editor_screen.dart';
+import '../widgets/audio_memory_player.dart';
 import '../widgets/note_card.dart';
 
 class NoteDetailScreen extends StatelessWidget {
@@ -60,7 +61,6 @@ class NoteDetailScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final provider = Provider.of<AppProvider>(context);
 
-    // Find the current note
     final noteIndex = provider.notes.indexWhere((n) => n.id == noteId);
     if (noteIndex == -1) {
       return Scaffold(
@@ -68,6 +68,7 @@ class NoteDetailScreen extends StatelessWidget {
         body: const Center(child: Text('Memory not found')),
       );
     }
+
     final note = provider.notes[noteIndex];
     final catColor = AppTheme.getCategoryColor(note.category);
     final dateStr = DateFormat('MMMM d, yyyy • h:mm a').format(note.createdAt);
@@ -126,7 +127,6 @@ class NoteDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category, Mood, and Date
               Row(
                 children: [
                   Container(
@@ -137,11 +137,7 @@ class NoteDetailScreen extends StatelessWidget {
                     ),
                     child: Text(
                       note.category,
-                      style: TextStyle(
-                        color: catColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: TextStyle(color: catColor, fontSize: 12, fontWeight: FontWeight.w700),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -163,26 +159,17 @@ class NoteDetailScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              // Created Date
               Row(
                 children: [
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 14,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
+                  Icon(Icons.access_time_rounded, size: 14, color: isDark ? Colors.white38 : Colors.black38),
                   const SizedBox(width: 6),
                   Text(
                     dateStr,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : const Color(0xFF6B7280),
-                    ),
+                    style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF6B7280)),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              // Title
               Text(
                 note.title,
                 style: theme.textTheme.headlineMedium?.copyWith(
@@ -192,27 +179,44 @@ class NoteDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              // Content Box
+              if (note.mediaType == 'image' && note.mediaData != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.memory(
+                    _decodeDataUri(note.mediaData!),
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (note.mediaType == 'audio' && note.mediaData != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF161724) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? const Color(0xFF25273C) : const Color(0xFFE5E7EB)),
+                  ),
+                  child: AudioMemoryPlayer(dataUri: note.mediaData!),
+                ),
+                const SizedBox(height: 16),
+              ],
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF161724) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF25273C) : const Color(0xFFE5E7EB),
-                  ),
+                  border: Border.all(color: isDark ? const Color(0xFF25273C) : const Color(0xFFE5E7EB)),
                 ),
                 child: SelectableText(
                   note.content,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    height: 1.6,
-                    fontSize: 15,
-                  ),
+                  style: theme.textTheme.bodyLarge?.copyWith(height: 1.6, fontSize: 15),
                 ),
               ),
               const SizedBox(height: 16),
-              // Tags List
               if (note.tags.isNotEmpty) ...[
                 Wrap(
                   spacing: 8,
@@ -237,18 +241,12 @@ class NoteDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
               ],
-
-              // Related Memories
               if (related.isNotEmpty) ...[
                 const Divider(),
                 const SizedBox(height: 16),
                 const Text(
                   'Related memories',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.2),
                 ),
                 const SizedBox(height: 12),
                 ListView.separated(
@@ -256,10 +254,7 @@ class NoteDetailScreen extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: related.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, idx) {
-                    final r = related[idx];
-                    return NoteCard(note: r);
-                  },
+                  itemBuilder: (context, idx) => NoteCard(note: related[idx]),
                 ),
               ],
             ],
@@ -267,5 +262,9 @@ class NoteDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Uint8List _decodeDataUri(String dataUri) {
+    return base64Decode(dataUri.substring(dataUri.indexOf(',') + 1));
   }
 }
