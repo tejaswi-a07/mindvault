@@ -47,12 +47,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   onDestinationSelected: _selectTab,
                   backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
                   indicatorColor: AppTheme.primaryViolet.withOpacity(0.14),
-                  minWidth: 78,
-                  minExtendedWidth: 220,
+                  minWidth: 82,
+                  minExtendedWidth: 236,
                   extended: isWide,
                   leading: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 20, 12, 28),
+                    padding: const EdgeInsets.fromLTRB(14, 20, 14, 24),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -61,29 +63,78 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                               padding: const EdgeInsets.all(9),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [AppTheme.primaryViolet, AppTheme.primaryVioletLight],
+                                  colors: [
+                                    AppTheme.primaryViolet,
+                                    AppTheme.primaryVioletLight,
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(13),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryViolet.withOpacity(0.22),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
                               ),
-                              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+                              child: const Icon(
+                                Icons.auto_awesome_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                             if (isWide) ...[
                               const SizedBox(width: 10),
                               const Text(
                                 'MINDVAULT',
-                                style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2, fontSize: 15),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
+                                  fontSize: 15,
+                                ),
                               ),
                             ],
                           ],
                         ),
-                        const SizedBox(height: 22),
-                        FloatingActionButton.small(
-                          onPressed: () => QuickCaptureSheet.show(context),
-                          backgroundColor: AppTheme.primaryViolet,
-                          foregroundColor: Colors.white,
-                          tooltip: 'Quick Capture',
-                          child: const Icon(Icons.add_rounded),
-                        ),
+                        if (isWide) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Capture what matters.\nRemember what matters.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.35,
+                              color: AppTheme.darkTextSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          SizedBox(
+                            height: 44,
+                            child: FilledButton.icon(
+                              onPressed: () => QuickCaptureSheet.show(context),
+                              icon: const Icon(Icons.add_rounded, size: 20),
+                              label: const Text('New memory'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppTheme.primaryViolet,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 18),
+                          FloatingActionButton.small(
+                            onPressed: () => QuickCaptureSheet.show(context),
+                            backgroundColor: AppTheme.primaryViolet,
+                            foregroundColor: Colors.white,
+                            tooltip: 'New memory',
+                            child: const Icon(Icons.add_rounded),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -122,9 +173,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    switchInCurve: Curves.easeOut,
-                    switchOutCurve: Curves.easeIn,
+                    duration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
                     child: KeyedSubtree(
                       key: ValueKey(_currentIndex),
                       child: _screens[_currentIndex],
@@ -138,7 +189,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
         return Scaffold(
           body: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
             child: KeyedSubtree(
               key: ValueKey(_currentIndex),
               child: _screens[_currentIndex],
@@ -151,18 +204,38 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             indicatorColor: AppTheme.primaryViolet.withOpacity(0.14),
             onDestinationSelected: _selectTab,
             destinations: const [
-              NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
-              NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2_rounded), label: 'Vault'),
-              NavigationDestination(icon: Icon(Icons.hub_outlined), selectedIcon: Icon(Icons.hub_rounded), label: 'Connect'),
-              NavigationDestination(icon: Icon(Icons.lock_clock_outlined), selectedIcon: Icon(Icons.lock_clock_rounded), label: 'Capsules'),
-              NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Profile'),
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.inventory_2_outlined),
+                selectedIcon: Icon(Icons.inventory_2_rounded),
+                label: 'Vault',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.hub_outlined),
+                selectedIcon: Icon(Icons.hub_rounded),
+                label: 'Connect',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.lock_clock_outlined),
+                selectedIcon: Icon(Icons.lock_clock_rounded),
+                label: 'Capsules',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Profile',
+              ),
             ],
           ),
           floatingActionButton: _currentIndex == 2
               ? null
               : FloatingActionButton(
                   onPressed: () => QuickCaptureSheet.show(context),
-                  tooltip: 'Quick Capture',
+                  tooltip: 'New memory',
                   child: const Icon(Icons.add_rounded, size: 28),
                 ),
         );
