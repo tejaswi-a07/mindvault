@@ -2,39 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/stat_card.dart';
+import '../widgets/empty_state.dart';
 import '../widgets/note_card.dart';
 import '../widgets/quick_capture_sheet.dart';
-import 'search_screen.dart';
+import '../widgets/stat_card.dart';
 import 'mood_screen.dart';
 import 'note_detail_screen.dart';
+import 'note_editor_screen.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning 👋';
-    if (hour < 17) return 'Good afternoon 👋';
-    return 'Good evening 👋';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
-  Widget _buildQuickCapturePill({
+  void _openEditor(BuildContext context, {String type = 'note', String? category}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NoteEditorScreen(
+          defaultCategory: category,
+          initialType: type,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAction({
     required BuildContext context,
-    required String emoji,
+    required IconData icon,
     required String label,
+    required Color color,
     required VoidCallback onTap,
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E202E) : Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -45,13 +58,13 @@ class HomeScreen extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 6),
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 7),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
               ),
@@ -66,7 +79,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final provider = Provider.of<AppProvider>(context);
+    final provider = context.watch<AppProvider>();
+    final recent = provider.recentNotes;
+    final mood = provider.todayMood;
 
     return Scaffold(
       body: SafeArea(
@@ -78,66 +93,58 @@ class HomeScreen extends StatelessWidget {
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // Top App Bar / Greeting Area
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _getGreeting(),
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.5,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _getGreeting(),
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.5,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "What's on your mind?",
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'What would you like to remember today?',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                            IconButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                                );
-                              },
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF1E202E) : Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: isDark ? const Color(0xFF2C2E42) : const Color(0xFFE5E7EB),
-                                  ),
+                            FilledButton.icon(
+                              onPressed: () => QuickCaptureSheet.show(context),
+                              icon: const Icon(Icons.add_rounded, size: 18),
+                              label: const Text('New memory'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppTheme.primaryViolet,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
                                 ),
-                                child: const Icon(Icons.search_rounded, size: 20),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Search Bar Button
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const SearchScreen()),
-                            );
-                          },
-                          child: Container(
+                        InkWell(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SearchScreen()),
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Ink(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                               color: isDark ? const Color(0xFF191A26) : Colors.white,
@@ -145,13 +152,6 @@ class HomeScreen extends StatelessWidget {
                               border: Border.all(
                                 color: isDark ? const Color(0xFF292B3E) : const Color(0xFFE2E4EC),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
                             ),
                             child: Row(
                               children: [
@@ -162,7 +162,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
-                                  'Search your memory, ideas, tags...',
+                                  'Search your memories, tags, or ideas...',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: isDark ? Colors.white38 : Colors.black38,
@@ -173,31 +173,14 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        // Quick Capture Section
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'QUICK CAPTURE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.0,
-                                color: isDark ? Colors.white54 : const Color(0xFF6B7280),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => QuickCaptureSheet.show(context),
-                              child: Text(
-                                'View all',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.primaryViolet,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'QUICK CAPTURE',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.0,
+                            color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         SingleChildScrollView(
@@ -205,49 +188,39 @@ class HomeScreen extends StatelessWidget {
                           physics: const BouncingScrollPhysics(),
                           child: Row(
                             children: [
-                              _buildQuickCapturePill(
+                              _buildQuickAction(
                                 context: context,
-                                emoji: '📝',
+                                icon: Icons.edit_note_rounded,
                                 label: 'Note',
-                                onTap: () => QuickCaptureSheet.show(context),
+                                color: const Color(0xFF3B82F6),
+                                onTap: () => _openEditor(context),
                               ),
                               const SizedBox(width: 8),
-                              _buildQuickCapturePill(
+                              _buildQuickAction(
                                 context: context,
-                                emoji: '💡',
+                                icon: Icons.lightbulb_outline_rounded,
                                 label: 'Idea',
-                                onTap: () => QuickCaptureSheet.show(context),
+                                color: const Color(0xFFF59E0B),
+                                onTap: () => _openEditor(context, type: 'idea', category: 'Ideas'),
                               ),
                               const SizedBox(width: 8),
-                              _buildQuickCapturePill(
+                              _buildQuickAction(
                                 context: context,
-                                emoji: '☑',
+                                icon: Icons.check_circle_outline_rounded,
                                 label: 'Task',
-                                onTap: () => QuickCaptureSheet.show(context),
+                                color: const Color(0xFF10B981),
+                                onTap: () => _openEditor(context, type: 'task', category: 'Study'),
                               ),
                               const SizedBox(width: 8),
-                              _buildQuickCapturePill(
+                              _buildQuickAction(
                                 context: context,
-                                emoji: '😊',
+                                icon: Icons.mood_rounded,
                                 label: 'Mood',
+                                color: const Color(0xFFEC4899),
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (_) => const MoodScreen()),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              _buildQuickCapturePill(
-                                context: context,
-                                emoji: '🎙',
-                                label: 'Voice',
-                                onTap: () => QuickCaptureSheet.show(context),
-                              ),
-                              const SizedBox(width: 8),
-                              _buildQuickCapturePill(
-                                context: context,
-                                emoji: '📷',
-                                label: 'Photo',
-                                onTap: () => QuickCaptureSheet.show(context),
                               ),
                             ],
                           ),
@@ -256,8 +229,6 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // YOUR SPACE STATS
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -274,14 +245,13 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Responsive Stat Cards Grid
                         GridView.count(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           crossAxisCount: isDesktop ? 5 : (isTablet ? 3 : 2),
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: isDesktop ? 1.6 : (isTablet ? 1.5 : 1.45),
+                          childAspectRatio: isDesktop ? 1.6 : 1.45,
                           children: [
                             StatCard(
                               title: 'Memories',
@@ -319,31 +289,53 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // TODAY'S REFLECTION & ON THIS DAY CARDS
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                    child: isDesktop
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildTodayReflection(context, provider, isDark)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildOnThisDay(context, provider, isDark)),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _buildTodayReflection(context, provider, isDark),
-                              const SizedBox(height: 14),
-                              _buildOnThisDay(context, provider, isDark),
-                            ],
+                if (mood != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF191A28) : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF282A3E) : const Color(0xFFE5E7EB),
                           ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(mood.emoji, style: const TextStyle(fontSize: 28)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Today's mood",
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    mood.note.isEmpty ? mood.label : mood.note,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const MoodScreen()),
+                              ),
+                              icon: const Icon(Icons.chevron_right_rounded),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-
-                // RECENT MEMORIES HEADER
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -359,222 +351,46 @@ class HomeScreen extends StatelessWidget {
                             color: isDark ? Colors.white54 : const Color(0xFF6B7280),
                           ),
                         ),
-                        Text(
-                          'Showing ${provider.recentNotes.length}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                        if (recent.isNotEmpty)
+                          Text(
+                            '${recent.length} recent',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
                 ),
-
-                // RECENT MEMORIES GRID / LIST
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
-                  sliver: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isDesktop ? 3 : (isTablet ? 2 : 1),
-                      mainAxisSpacing: 14,
-                      crossAxisSpacing: 14,
-                      childAspectRatio: isDesktop ? 1.45 : (isTablet ? 1.4 : 1.7),
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final note = provider.recentNotes[index];
-                        return NoteCard(note: note);
-                      },
-                      childCount: provider.recentNotes.length,
-                    ),
-                  ),
-                ),
+                recent.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
+                          child: EmptyStateWidget.vaultEmpty(
+                            onCapture: () => QuickCaptureSheet.show(context),
+                          ),
+                        ),
+                      )
+                    : SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
+                        sliver: SliverGrid(
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: isDesktop ? 3 : (isTablet ? 2 : 1),
+                            mainAxisSpacing: 14,
+                            crossAxisSpacing: 14,
+                            childAspectRatio: isDesktop ? 1.45 : (isTablet ? 1.4 : 1.7),
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => NoteCard(note: recent[index]),
+                            childCount: recent.length,
+                          ),
+                        ),
+                      ),
               ],
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildTodayReflection(BuildContext context, AppProvider provider, bool isDark) {
-    final mood = provider.todayMood;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF191A28) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? const Color(0xFF282A3E) : const Color(0xFFE5E7EB),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.auto_awesome, color: Color(0xFF10B981), size: 16),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                "Today's Reflection",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              if (mood != null)
-                Text(
-                  '${mood.emoji} Feeling ${mood.label.toLowerCase()}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : const Color(0xFF4B5563),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            mood != null && mood.note.isNotEmpty
-                ? '"${mood.note}"'
-                : '"Today I finally started building my Flutter project. Setting high standards for design and user experience."',
-            style: const TextStyle(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MoodScreen()),
-                );
-              },
-              icon: const Icon(Icons.add_rounded, size: 16),
-              label: const Text('Add reflection', style: TextStyle(fontSize: 13)),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.primaryViolet,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOnThisDay(BuildContext context, AppProvider provider, bool isDark) {
-    final note = provider.onThisDayNote;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF191A28) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? const Color(0xFF282A3E) : const Color(0xFFE5E7EB),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.history_rounded, color: Color(0xFFF59E0B), size: 16),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'On This Day',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF252638) : const Color(0xFFEDEFF7),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '1 year ago',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white60 : const Color(0xFF6B7280),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            note != null
-                ? 'You wrote:\n"${note.title}: ${note.content.split('\n').first}"'
-                : 'You wrote:\n"I want to become really good at Flutter and build impactful products."',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () {
-                if (note != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => NoteDetailScreen(noteId: note.id)),
-                  );
-                }
-              },
-              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-              label: const Text('View memory', style: TextStyle(fontSize: 13)),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFF59E0B),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
