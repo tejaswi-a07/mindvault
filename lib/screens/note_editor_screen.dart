@@ -10,12 +10,7 @@ class NoteEditorScreen extends StatefulWidget {
   final String? defaultCategory;
   final String? initialType;
 
-  const NoteEditorScreen({
-    super.key,
-    this.noteToEdit,
-    this.defaultCategory,
-    this.initialType,
-  });
+  const NoteEditorScreen({super.key, this.noteToEdit, this.defaultCategory, this.initialType});
 
   @override
   State<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -26,21 +21,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   late TextEditingController _tagInputController;
-
   late String _category;
   late String _mood;
   late bool _isFavorite;
   late List<String> _tags;
   late String _noteType;
 
-  static const List<String> categories = [
-    'Personal',
-    'Study',
-    'Ideas',
-    'Work',
-    'Travel',
-    'Goals',
-  ];
+  static const List<String> categories = ['Personal', 'Study', 'Ideas', 'Work', 'Travel', 'Goals'];
 
   @override
   void initState() {
@@ -49,7 +36,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _titleController = TextEditingController(text: n?.title ?? '');
     _contentController = TextEditingController(text: n?.content ?? '');
     _tagInputController = TextEditingController();
-
     _category = n?.category ?? widget.defaultCategory ?? 'Personal';
     _mood = n?.mood ?? '😊';
     _isFavorite = n?.isFavorite ?? false;
@@ -77,13 +63,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
   void _saveNote() {
     if (!_formKey.currentState!.validate()) return;
-
     final provider = Provider.of<AppProvider>(context, listen: false);
     final now = DateTime.now();
 
     if (widget.noteToEdit == null) {
-      // Create new note
-      final newNote = Note(
+      provider.addNote(Note(
         id: 'note-${now.millisecondsSinceEpoch}',
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
@@ -94,10 +78,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         isFavorite: _isFavorite,
         tags: _tags,
         type: _noteType,
-      );
-      provider.addNote(newNote);
+      ));
     } else {
-      // Update existing note
       final updated = widget.noteToEdit!.copyWith(
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
@@ -107,6 +89,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         isFavorite: _isFavorite,
         tags: _tags,
         type: _noteType,
+        mediaData: widget.noteToEdit!.mediaData,
+        mediaType: widget.noteToEdit!.mediaType,
       );
       provider.updateNote(updated);
     }
@@ -125,7 +109,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         duration: const Duration(seconds: 2),
       ),
     );
-
     Navigator.pop(context);
   }
 
@@ -137,18 +120,12 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(context)),
         title: Text(isEditing ? 'Edit Memory' : 'New Memory'),
         actions: [
           IconButton(
             tooltip: _isFavorite ? 'Remove Favorite' : 'Mark as Favorite',
-            icon: Icon(
-              _isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: _isFavorite ? Colors.amber : null,
-            ),
+            icon: Icon(_isFavorite ? Icons.star_rounded : Icons.star_outline_rounded, color: _isFavorite ? Colors.amber : null),
             onPressed: () => setState(() => _isFavorite = !_isFavorite),
           ),
           Padding(
@@ -173,34 +150,15 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
             padding: const EdgeInsets.all(20),
             physics: const BouncingScrollPhysics(),
             children: [
-              // Title Field
               TextFormField(
                 controller: _titleController,
                 textCapitalization: TextCapitalization.sentences,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.4,
-                ),
-                decoration: const InputDecoration(
-                  hintText: 'Memory Title...',
-                  fillColor: Colors.transparent,
-                  contentPadding: EdgeInsets.zero,
-                  border: InputBorder.none,
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return 'Please give your memory a title';
-                  }
-                  return null;
-                },
+                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.4),
+                decoration: const InputDecoration(hintText: 'Memory Title...', fillColor: Colors.transparent, contentPadding: EdgeInsets.zero, border: InputBorder.none),
+                validator: (val) => val == null || val.trim().isEmpty ? 'Please give your memory a title' : null,
               ),
               const SizedBox(height: 16),
-
-              // Category Selector
-              const Text(
-                'Category',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-              ),
+              const Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               const SizedBox(height: 8),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -228,65 +186,33 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Mood Selector
-              const Text(
-                'Associated Mood',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-              ),
+              const Text('Associated Mood', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               const SizedBox(height: 8),
-              MoodSelector(
-                selectedMood: _mood,
-                onMoodSelected: (opt) => setState(() => _mood = opt.emoji),
-              ),
+              MoodSelector(selectedMood: _mood, onMoodSelected: (opt) => setState(() => _mood = opt.emoji)),
               const SizedBox(height: 20),
-
-              // Content Field
               TextFormField(
                 controller: _contentController,
                 maxLines: null,
                 minLines: 8,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'What thoughts, insights, or details would you like to preserve?',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return 'Please enter some memory content';
-                  }
-                  return null;
-                },
+                decoration: const InputDecoration(hintText: 'What thoughts, insights, or details would you like to preserve?', border: OutlineInputBorder()),
+                validator: (val) => val == null || val.trim().isEmpty ? 'Please enter some memory content' : null,
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  '${_contentController.text.length} characters',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-                ),
+                child: Text('${_contentController.text.length} characters', style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.black38)),
               ),
               const SizedBox(height: 20),
-
-              // Tags Section
-              const Text(
-                'Tags (#topics)',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-              ),
+              const Text('Tags (#topics)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _tagInputController,
-                      decoration: const InputDecoration(
-                        hintText: 'Add a tag and press Add...',
-                        prefixText: '#',
-                      ),
+                      decoration: const InputDecoration(hintText: 'Add a tag and press Add...', prefixText: '#'),
                       onSubmitted: _addTag,
                     ),
                   ),
@@ -307,13 +233,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _tags.map((tag) {
-                    return Chip(
-                      label: Text('#$tag'),
-                      deleteIcon: const Icon(Icons.close, size: 14),
-                      onDeleted: () => setState(() => _tags.remove(tag)),
-                    );
-                  }).toList(),
+                  children: _tags.map((tag) => Chip(
+                    label: Text('#$tag'),
+                    deleteIcon: const Icon(Icons.close, size: 14),
+                    onDeleted: () => setState(() => _tags.remove(tag)),
+                  )).toList(),
                 ),
               ],
             ],
