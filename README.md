@@ -1,74 +1,61 @@
 # MindVault 🧠
 
-> *"Capture what matters. Remember what matters."*
+> **Capture what matters. Remember what matters.**
 
-MindVault is a premium personal knowledge, memory, idea, reflection, and note-management Flutter application built with **Material 3**. Designed for College UDF (UI Design using Flutter) curriculum and product portfolios.
+MindVault is a premium personal knowledge, memory, idea, reflection, and note-management application built as a **genuine Flutter + Dart Material 3 app** for Android and Flutter Web. It is designed as a polished product/portfolio project rather than a basic CRUD notes demo.
 
----
+## ✨ Product experience
 
-## 🚀 How to Run
+- Premium indigo/violet visual language with lavender accents and warm light/dark surfaces.
+- Rounded cards, subtle borders, polished typography, tasteful gradients, and responsive animations.
+- Mobile uses Material 3 bottom navigation; tablet/desktop uses an extended navigation rail.
+- Notes, ideas, tasks, reflections, moods, voice/photo placeholders, favorites, tags, search, filters, and sorting.
+- Interactive **Memory Map** powered by Flutter `CustomPainter` with connected nodes and related notes.
+- **Time Capsules** with future unlock dates, countdowns, and reveal state.
+- **Mood Tracker** with daily entries and history visualization.
+- Profile settings with theme switching, reset/clear data, and app analytics.
+- Local persistence using `shared_preferences` so notes, moods, capsules, theme, and accent settings survive app restarts.
+
+## 🚀 Run the Flutter app
 
 ### Prerequisites
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (>= 3.10.0)
-- Android Studio / VS Code with Flutter & Dart extensions
 
-### 1. Install Dependencies
+- Flutter SDK 3.10+
+- Dart 3+
+- Android Studio or VS Code with Flutter/Dart extensions
+
+### Install dependencies
+
 ```bash
 flutter pub get
 ```
 
-### 2. Run on Android Emulator or Physical Device
+### Run on Android
+
 ```bash
 flutter run
 ```
 
-### 3. Run on Flutter Web (Chrome)
+### Run on Flutter Web
+
 ```bash
 flutter run -d chrome
 ```
 
----
+## 🗂️ Project structure
 
-## 📱 Features
+```text
+lib/
+├── data/        # Seed/demo data
+├── models/      # Note, mood, capsule, and memory-map models
+├── providers/   # Shared app state + local persistence
+├── screens/     # Home, Vault, Connect, Capsules, Mood, Search, Profile
+├── theme/       # Material 3 light/dark design system
+├── widgets/     # Reusable cards, dialogs, capture sheets, and graph widgets
+└── main.dart    # Flutter entry point
+web/             # Flutter Web bootstrap files
+```
 
-1. **Dashboard & Quick Capture**:
-   - Greeting & search bar
-   - 6 Quick capture modes: 📝 Note, 💡 Idea, ☑ Task, 😊 Mood, 🎙 Voice memo, 📷 Photo
-   - Real-time animated stats (Memories, Ideas, Reflections, Favorites, Capsules)
-   - Today's Reflection & nostalgic "On This Day" card
-   - Recent Memories list
+## 🧩 Architecture
 
-2. **The Vault**:
-   - Filter chips by category (`All`, `Personal`, `Study`, `Ideas`, `Work`, `Travel`, `Goals`)
-   - Real-time search by keyword, title, tag, or content
-   - Sort by Newest, Oldest, A–Z Alphabetical, and Most Loved (Favorites)
-   - Note options sheet on long-press (Edit, Favorite, Delete with confirmation dialog)
-
-3. **Your Mind (Interactive Memory Map)**:
-   - Visual knowledge graph built with `CustomPainter`
-   - Bézier connection curves and glowing active states
-   - Tappable nodes that highlight linked nodes and reveal related notes below
-
-4. **Time Capsules**:
-   - Sealed messages for your future self with countdown day trackers
-   - Unlocked demo capsule with celebratory reveal dialog
-   - Create new capsules with future date picker
-
-5. **Mood Tracker**:
-   - Daily mood selector (😊 Happy, 😌 Calm, 🔥 Motivated, 🤔 Curious, 😔 Sad, 😡 Frustrated)
-   - Reflection logger
-   - Weekly mood history visualization
-
-6. **Search**:
-   - Search across title, content, category, and tags
-   - Related topic chips
-   - Custom empty state ("Nothing surfaced.")
-
-7. **Profile & Material 3 Dark Mode**:
-   - Light, Dark, and System theme switching
-   - Space analytics & storage manager
-   - Reset demo data & Export JSON
-
-8. **Responsive Layout**:
-   - Mobile: Bottom `NavigationBar`, single column, floating action button
-   - Tablet / Desktop / Web: `NavigationRail` sidebar with header branding and responsive `GridView`
+MindVault uses Flutter widgets for UI, `Provider` for shared state, model classes for typed data, and `SharedPreferences` for lightweight local persistence. There is no React/Vite application in the project; the repository is intentionally Flutter-first.
