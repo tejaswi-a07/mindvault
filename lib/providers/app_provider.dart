@@ -37,11 +37,11 @@ class AppProvider with ChangeNotifier {
   }
 
   void _initializeData() {
-    _notes = MockData.getInitialNotes();
-    _moods = MockData.getInitialMoods();
-    _capsules = MockData.getInitialCapsules();
-    _nodes = MockData.getInitialNodes();
-    _edges = MockData.getInitialEdges();
+    _notes = [];
+    _moods = [];
+    _capsules = [];
+    _nodes = [];
+    _edges = [];
   }
 
   Future<void> _loadPersistedData() async {
