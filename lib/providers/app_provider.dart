@@ -104,9 +104,11 @@ class AppProvider with ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   Color get accentColor => _accentColor;
 
-  int get totalMemoriesCount => 120 + _notes.length;
-  int get ideasCount => 20 + _notes.where((n) => n.category == 'Ideas' || n.type == 'idea').length;
-  int get reflectionsCount => 14 + _notes.where((n) => n.type == 'reflection').length;
+  // Dashboard metrics reflect the user's actual stored data rather than
+  // decorative placeholder offsets.
+  int get totalMemoriesCount => _notes.length;
+  int get ideasCount => _notes.where((n) => n.category == 'Ideas' || n.type == 'idea').length;
+  int get reflectionsCount => _moods.length;
   int get favoritesCount => _notes.where((n) => n.isFavorite).length;
   int get capsulesCount => _capsules.length;
   MoodEntry? get todayMood => _moods.isEmpty ? null : _moods.first;
