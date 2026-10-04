@@ -40,11 +40,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
         (item) => item.lensDirection == CameraLensDirection.back,
         orElse: () => cameras.first,
       );
-      final controller = CameraController(
-        camera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
+      final controller = CameraController(camera, ResolutionPreset.medium, enableAudio: false);
       _controller = controller;
       _initializeFuture = controller.initialize();
       await _initializeFuture;
@@ -63,7 +59,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
 
   Future<void> _takePhoto() async {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized || controller.value.isTakingPicture) return;
+    if (controller == null || !controller.value.isInitialized || controller.value.isTakingPicture || _isSaving) return;
 
     try {
       final image = await controller.takePicture();
@@ -78,26 +74,33 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
   Future<void> _save() async {
     if (_imageData == null || _isSaving) return;
     setState(() => _isSaving = true);
-    final now = DateTime.now();
-    final title = _titleController.text.trim().isEmpty ? 'Photo memory' : _titleController.text.trim();
 
-    context.read<AppProvider>().addNote(
-      Note(
-        id: 'photo-${now.millisecondsSinceEpoch}',
-        title: title,
-        content: 'Photo captured with MindVault.',
-        category: 'Personal',
-        mood: '📷',
-        createdAt: now,
-        updatedAt: now,
-        tags: const ['photo'],
-        type: 'photo',
-        mediaData: _imageData,
-        mediaType: 'image',
-      ),
-    );
+    try {
+      final now = DateTime.now();
+      final title = _titleController.text.trim().isEmpty ? 'Photo memory' : _titleController.text.trim();
+      await context.read<AppProvider>().addNote(
+        Note(
+          id: 'photo-${now.microsecondsSinceEpoch}',
+          title: title,
+          content: 'Photo captured with MindVault.',
+          category: 'Personal',
+          mood: '📷',
+          createdAt: now,
+          updatedAt: now,
+          tags: const ['photo'],
+          type: 'photo',
+          mediaData: _imageData,
+          mediaType: 'image',
+        ),
+      );
 
-    if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showError('Could not save photo memory: $e');
+      }
+    }
   }
 
   void _showError(String message) {
@@ -117,7 +120,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
         title: const Text('Photo memory'),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSaving ? null : () => Navigator.pop(context),
         ),
       ),
       body: Center(
@@ -128,6 +131,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
             children: [
               TextField(
                 controller: _titleController,
+                enabled: !_isSaving,
                 decoration: const InputDecoration(
                   labelText: 'Title',
                   hintText: 'Give this photo a name',
@@ -141,15 +145,10 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF10111A) : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF292B3E) : const Color(0xFFE5E7EB),
-                  ),
+                  border: Border.all(color: isDark ? const Color(0xFF292B3E) : const Color(0xFFE5E7EB)),
                 ),
                 child: _imageData != null
-                    ? Image.memory(
-                        base64Decode(_imageData!.split(',').last),
-                        fit: BoxFit.cover,
-                      )
+                    ? Image.memory(base64Decode(_imageData!.split(',').last), fit: BoxFit.cover)
                     : FutureBuilder<void>(
                         future: _initializeFuture,
                         builder: (context, snapshot) {
@@ -164,11 +163,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
                                     const SizedBox(height: 12),
                                     const Text('Camera could not be opened.', textAlign: TextAlign.center),
                                     const SizedBox(height: 8),
-                                    Text(
-                                      'Check Chrome camera permission and try again.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
-                                    ),
+                                    Text('Check Chrome camera permission and try again.', textAlign: TextAlign.center, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
                                   ],
                                 ),
                               ),
@@ -187,11 +182,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
                   onPressed: _takePhoto,
                   icon: const Icon(Icons.camera_alt_rounded),
                   label: const Text('Take photo'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.primaryViolet,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(52),
-                  ),
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.primaryViolet, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52)),
                 )
               else ...[
                 OutlinedButton.icon(
@@ -205,11 +196,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
                   onPressed: _isSaving ? null : _save,
                   icon: const Icon(Icons.save_rounded),
                   label: Text(_isSaving ? 'Saving…' : 'Save photo memory'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.primaryViolet,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(52),
-                  ),
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.primaryViolet, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52)),
                 ),
               ],
             ],
