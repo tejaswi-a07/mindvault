@@ -1,0 +1,6 @@
+{
+  "name": "MindVault",
+  "description": "Capture what matters. Remember what matters. A premium personal knowledge, memory, idea, reflection and note-management Flutter application.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
