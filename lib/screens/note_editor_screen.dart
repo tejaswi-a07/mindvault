@@ -26,6 +26,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late bool _isFavorite;
   late List<String> _tags;
   late String _noteType;
+  bool _isSaving = false;
 
   static const List<String> categories = ['Personal', 'Study', 'Ideas', 'Work', 'Travel', 'Goals'];
 
@@ -61,55 +62,70 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     }
   }
 
-  void _saveNote() {
-    if (!_formKey.currentState!.validate()) return;
-    final provider = Provider.of<AppProvider>(context, listen: false);
-    final now = DateTime.now();
+  Future<void> _saveNote() async {
+    if (_isSaving || !_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
 
-    if (widget.noteToEdit == null) {
-      provider.addNote(Note(
-        id: 'note-${now.millisecondsSinceEpoch}',
-        title: _titleController.text.trim(),
-        content: _contentController.text.trim(),
-        category: _category,
-        mood: _mood,
-        createdAt: now,
-        updatedAt: now,
-        isFavorite: _isFavorite,
-        tags: _tags,
-        type: _noteType,
-      ));
-    } else {
-      final updated = widget.noteToEdit!.copyWith(
-        title: _titleController.text.trim(),
-        content: _contentController.text.trim(),
-        category: _category,
-        mood: _mood,
-        updatedAt: now,
-        isFavorite: _isFavorite,
-        tags: _tags,
-        type: _noteType,
-        mediaData: widget.noteToEdit!.mediaData,
-        mediaType: widget.noteToEdit!.mediaType,
-      );
-      provider.updateNote(updated);
-    }
+    try {
+      final provider = Provider.of<AppProvider>(context, listen: false);
+      final now = DateTime.now();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Text(widget.noteToEdit == null ? 'Memory saved to Vault!' : 'Memory updated!'),
-          ],
+      if (widget.noteToEdit == null) {
+        await provider.addNote(Note(
+          id: 'note-${now.microsecondsSinceEpoch}',
+          title: _titleController.text.trim(),
+          content: _contentController.text.trim(),
+          category: _category,
+          mood: _mood,
+          createdAt: now,
+          updatedAt: now,
+          isFavorite: _isFavorite,
+          tags: List<String>.from(_tags),
+          type: _noteType,
+        ));
+      } else {
+        final updated = widget.noteToEdit!.copyWith(
+          title: _titleController.text.trim(),
+          content: _contentController.text.trim(),
+          category: _category,
+          mood: _mood,
+          updatedAt: now,
+          isFavorite: _isFavorite,
+          tags: List<String>.from(_tags),
+          type: _noteType,
+          mediaData: widget.noteToEdit!.mediaData,
+          mediaType: widget.noteToEdit!.mediaType,
+        );
+        await provider.updateNote(updated);
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Text(widget.noteToEdit == null ? 'Memory saved to Vault!' : 'Memory updated!'),
+            ],
+          ),
+          backgroundColor: const Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
         ),
-        backgroundColor: const Color(0xFF10B981),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-    Navigator.pop(context);
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not save memory. Please try again.\n$e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -120,25 +136,25 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: _isSaving ? null : () => Navigator.pop(context)),
         title: Text(isEditing ? 'Edit Memory' : 'New Memory'),
         actions: [
           IconButton(
             tooltip: _isFavorite ? 'Remove Favorite' : 'Mark as Favorite',
             icon: Icon(_isFavorite ? Icons.star_rounded : Icons.star_outline_rounded, color: _isFavorite ? Colors.amber : null),
-            onPressed: () => setState(() => _isFavorite = !_isFavorite),
+            onPressed: _isSaving ? null : () => setState(() => _isFavorite = !_isFavorite),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: ElevatedButton(
-              onPressed: _saveNote,
+              onPressed: _isSaving ? null : _saveNote,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryViolet,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('Save'),
+              child: Text(_isSaving ? 'Saving…' : 'Save'),
             ),
           ),
         ],
