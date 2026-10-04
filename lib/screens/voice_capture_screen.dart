@@ -82,12 +82,13 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
     _streamSubscription = null;
 
     if (_chunks.isEmpty) {
-      setState(() => _isRecording = false);
+      if (mounted) setState(() => _isRecording = false);
       _showError('No audio was captured. Please try again.');
       return;
     }
 
     final wav = _buildWav(_chunks);
+    if (!mounted) return;
     setState(() {
       _isRecording = false;
       _audioData = 'data:audio/wav;base64,${base64Encode(wav)}';
@@ -131,28 +132,34 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
 
   Future<void> _save() async {
     if (_audioData == null || _isSaving) return;
-    final title = _titleController.text.trim().isEmpty ? 'Voice memory' : _titleController.text.trim();
     setState(() => _isSaving = true);
 
-    final now = DateTime.now();
-    context.read<AppProvider>().addNote(
-      Note(
-        id: 'voice-${now.millisecondsSinceEpoch}',
-        title: title,
-        content: 'Voice memo recorded for ${_seconds.clamp(1, _maxSeconds)} seconds.',
-        category: 'Personal',
-        mood: '🎙️',
-        createdAt: now,
-        updatedAt: now,
-        tags: const ['voice'],
-        type: 'voice',
-        mediaData: _audioData,
-        mediaType: 'audio',
-      ),
-    );
+    try {
+      final title = _titleController.text.trim().isEmpty ? 'Voice memory' : _titleController.text.trim();
+      final now = DateTime.now();
+      await context.read<AppProvider>().addNote(
+        Note(
+          id: 'voice-${now.microsecondsSinceEpoch}',
+          title: title,
+          content: 'Voice memo recorded for ${_seconds.clamp(1, _maxSeconds)} seconds.',
+          category: 'Personal',
+          mood: '🎙️',
+          createdAt: now,
+          updatedAt: now,
+          tags: const ['voice'],
+          type: 'voice',
+          mediaData: _audioData,
+          mediaType: 'audio',
+        ),
+      );
 
-    if (!mounted) return;
-    Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showError('Could not save voice memory: $e');
+      }
+    }
   }
 
   void _showError(String message) {
@@ -171,7 +178,7 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
         title: const Text('Voice memory'),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSaving ? null : () => Navigator.pop(context),
         ),
       ),
       body: Center(
@@ -182,6 +189,7 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
             children: [
               TextField(
                 controller: _titleController,
+                enabled: !_isSaving,
                 decoration: const InputDecoration(
                   labelText: 'Title',
                   hintText: 'Give this voice memory a name',
@@ -194,9 +202,7 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF191A28) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF292B3E) : const Color(0xFFE5E7EB),
-                  ),
+                  border: Border.all(color: isDark ? const Color(0xFF292B3E) : const Color(0xFFE5E7EB)),
                 ),
                 child: Column(
                   children: [
@@ -205,9 +211,7 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _isRecording
-                            ? Colors.red.withOpacity(0.14)
-                            : AppTheme.primaryViolet.withOpacity(0.12),
+                        color: _isRecording ? Colors.red.withOpacity(0.14) : AppTheme.primaryViolet.withOpacity(0.12),
                       ),
                       child: Icon(
                         _isRecording ? Icons.mic_rounded : Icons.mic_none_rounded,
@@ -222,9 +226,7 @@ class _VoiceCaptureScreenState extends State<VoiceCaptureScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _isRecording
-                          ? 'Speak naturally. Recording stops automatically after $_maxSeconds seconds.'
-                          : 'Chrome will ask for microphone permission the first time.',
+                      _isRecording ? 'Speak naturally. Recording stops automatically after $_maxSeconds seconds.' : 'Chrome will ask for microphone permission the first time.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
                     ),
