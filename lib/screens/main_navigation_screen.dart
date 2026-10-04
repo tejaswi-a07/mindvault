@@ -45,11 +45,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 NavigationRail(
                   selectedIndex: _currentIndex,
                   onDestinationSelected: _selectTab,
-                  backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-                  indicatorColor: AppTheme.primaryViolet.withOpacity(0.14),
+                  backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                  indicatorColor: isDark
+                      ? AppTheme.darkSurfaceSubtle
+                      : AppTheme.secondaryLavenderLight,
                   minWidth: 82,
                   minExtendedWidth: 236,
                   extended: isWide,
+                  groupAlignment: -0.55,
+                  useIndicator: true,
                   leading: Padding(
                     padding: const EdgeInsets.fromLTRB(14, 20, 14, 24),
                     child: Column(
@@ -98,12 +102,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         ),
                         if (isWide) ...[
                           const SizedBox(height: 8),
-                          const Text(
+                          Text(
                             'Capture what matters.\nRemember what matters.',
                             style: TextStyle(
                               fontSize: 11,
                               height: 1.35,
-                              color: AppTheme.darkTextSecondary,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : AppTheme.lightTextSecondary,
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -200,8 +206,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex,
             elevation: 2,
-            backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
-            indicatorColor: AppTheme.primaryViolet.withOpacity(0.14),
+            backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            indicatorColor: isDark
+                ? AppTheme.darkSurfaceSubtle
+                : AppTheme.secondaryLavenderLight,
             onDestinationSelected: _selectTab,
             destinations: const [
               NavigationDestination(
