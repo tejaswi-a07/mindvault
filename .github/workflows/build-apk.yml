@@ -34,8 +34,32 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Generate Android platform files
+        run: flutter create --platforms=android --project-name mindvault .
+
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Add camera and microphone permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          text = path.read_text()
+          marker = '<manifest '
+          start = text.find('>')
+          if start == -1:
+              raise SystemExit("Could not locate Android manifest root element")
+          permissions = [
+              '    <uses-permission android:name="android.permission.CAMERA"/>',
+              '    <uses-permission android:name="android.permission.RECORD_AUDIO"/>',
+          ]
+          for permission in permissions:
+              if permission not in text:
+                  text = text[:start + 1] + '\n' + permission + text[start + 1:]
+                  start = text.find('>')
+          path.write_text(text)
+          PY
 
       - name: Build release APK
         run: flutter build apk --release
