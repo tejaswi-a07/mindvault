@@ -2,7 +2,11 @@
 
 > **Capture what matters. Remember what matters.**
 
+[**⬇️ Download MindVault for Android (APK)**](https://github.com/tejaswi-a07/mindvault/releases/download/v1.0.0/app-release.apk)
+
 MindVault is a premium personal knowledge, memory, idea, reflection, and note-management application built as a **genuine Flutter + Dart Material 3 app** for Android and Flutter Web. It is designed as a polished product/portfolio project rather than a basic CRUD notes demo.
+
+**Android installation:** Download the APK above, open it on your Android device, and approve the installation if Android asks.
 
 ## ✨ Product experience
 
